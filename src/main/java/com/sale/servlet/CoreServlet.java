@@ -2,7 +2,7 @@ package com.sale.servlet;
 
 import java.io.IOException;
 import java.io.PrintWriter;
-import java.text.SimpleDateFormat;
+import java.util.Date;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
@@ -23,8 +23,7 @@ import com.sale.util.SignUtil;
  */
 public class CoreServlet extends HttpServlet {
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
 
 		// 微信加密签名
 		String signature = req.getParameter("signature");
@@ -45,52 +44,27 @@ public class CoreServlet extends HttpServlet {
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
-			throws ServletException, IOException {
-		resp.setContentType("application/xml");
-		resp.setCharacterEncoding("UTF-8");
-		PrintWriter out = resp.getWriter();
-		/*Scanner scanner = new Scanner(req.getInputStream());
-		StringBuffer sb = new StringBuffer(100);
-		while (scanner.hasNextLine()) {
-			sb.append(scanner.nextLine());
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+		req.setCharacterEncoding(MessageUtil.DEFAULT_ENCODING);
+		resp.setCharacterEncoding(MessageUtil.DEFAULT_ENCODING);
+		resp.setContentType(MessageUtil.DEFAULT_CONTENT_TYPE);
 
-		}
-		System.out.println(sb);*/
-		
-		/*try {
-			Map<String, String> map = RequestXML2Map.parseXml(req);
-			System.out.println(map.toString());
-			String content = map.get("Content");
-			System.out.println(content);
-			if("d".equals(content)){
-				long time = System.currentTimeMillis();
-				SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-				String date = dateFormat.format(time);
-				out.print("今天是：" + date);
-			}else{
-				out.print("Hello World!");
-			}
-			
-		} catch (Exception e) {
-			e.printStackTrace();
-		}finally{
-			out.close();
-		}*/
-		String reqXml = IOUtils.toString(req.getInputStream(),"utf-8");
-		RequestTextMessage rtm = MessageUtil.getRequestTextMessage(reqXml);
-		String content = rtm.getContent();
+		PrintWriter out = resp.getWriter();
+		String reqXml = IOUtils.toString(req.getInputStream(), MessageUtil.DEFAULT_ENCODING);
+		RequestTextMessage reqRtm = MessageUtil.getRequestTextMessage(reqXml);
 		ResponseTextMessage respMsg = new ResponseTextMessage();
-		if("d".equals(content)){
-			long time = System.currentTimeMillis();
-			SimpleDateFormat dateFormat = new SimpleDateFormat("yyyy-MM-dd");
-			String date = dateFormat.format(time);
-			respMsg.setContent("今天是：" + date);
-			out.print(MessageUtil.getResponseTextMessage(respMsg));
-		}else{
-			respMsg.setContent("Hello World!");
-			out.print(MessageUtil.getResponseTextMessage(respMsg));
+		String msg = "您输入的消息是" + reqRtm.getContent();
+		if (MessageUtil.MESSAGE_TEXT.equals(reqRtm.getMsgType())) {
+			respMsg.setToUserName(reqRtm.getFromUserName());
+			respMsg.setFromUserName(reqRtm.getToUserName());
+			respMsg.setMsgType(MessageUtil.MESSAGE_TEXT);
+			respMsg.setCreateTime(String.valueOf(new Date().getTime()));
+			respMsg.setContent(msg);
+			String msgXml = MessageUtil.getResponseTextMessage(respMsg);
+			System.out.println(msgXml);
+			out.print(msgXml);
 		}
+		out.close();
 	}
 
 }

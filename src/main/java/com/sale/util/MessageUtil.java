@@ -13,19 +13,25 @@ import com.thoughtworks.xstream.io.xml.DomDriver;
  * 
  */
 public class MessageUtil {
+	
+	public static final String DEFAULT_ENCODING = "utf-8";
+	public static final String DEFAULT_CONTENT_TYPE = "application/xml";
+	public static final String ROOT_ELEMENT = "xml";
+	public static final String MESSAGE_TEXT = "text";
+	
 	// 获取推送文本消息
 	public static RequestTextMessage getRequestTextMessage(String xml) {
 
 		XStream xstream = new XStream(new DomDriver());
 
-		xstream.alias("xml", RequestTextMessage.class);
-		xstream.aliasField("ToUserName", RequestTextMessage.class, "toUserName");
+		xstream.alias(ROOT_ELEMENT, RequestTextMessage.class);
+		xstream.aliasField("ToUserName", RequestTextMessage.class, "ToUserName");
 		xstream.aliasField("FromUserName", RequestTextMessage.class,
-				"fromUserName");
-		xstream.aliasField("CreateTime", RequestTextMessage.class, "createTime");
-		xstream.aliasField("MsgType", RequestTextMessage.class, "messageType");
-		xstream.aliasField("Content", RequestTextMessage.class, "content");
-		xstream.aliasField("MsgId", RequestTextMessage.class, "msgId");
+				"FromUserName");
+		xstream.aliasField("CreateTime", RequestTextMessage.class, "CreateTime");
+		xstream.aliasField("MsgType", RequestTextMessage.class, "MsgType");
+		xstream.aliasField("Content", RequestTextMessage.class, "Content");
+		xstream.aliasField("MsgId", RequestTextMessage.class, "MsgId");
 
 		RequestTextMessage requestTextMessage = (RequestTextMessage) xstream
 				.fromXML(xml);
@@ -34,23 +40,9 @@ public class MessageUtil {
 
 	// 回复文本消息
 	public static String getResponseTextMessage(ResponseTextMessage respMsg) {
-
-		ResponseTextMessage we = new ResponseTextMessage();
-		we.setMessageType("text");
-		we.setCreateTime(new Long(new Date().getTime()).toString());
-		we.setContent(respMsg.getContent());
-		we.setToUserName(respMsg.getToUserName());
-		we.setFromUserName(respMsg.getFromUserName());
 		XStream xstream = new XStream(new DomDriver());
-		xstream.alias("xml", ResponseTextMessage.class);
-		xstream.aliasField("ToUserName", ResponseTextMessage.class, "toUserName");
-		xstream.aliasField("FromUserName", ResponseTextMessage.class,
-				"fromUserName");
-		xstream.aliasField("CreateTime", ResponseTextMessage.class, "createTime");
-		xstream.aliasField("MsgType", ResponseTextMessage.class, "messageType");
-		xstream.aliasField("Content", ResponseTextMessage.class, "content");
-//		xstream.aliasField("FuncFlag", ResponseTextMessage.class, "funcFlag");
-		String xml = xstream.toXML(we);
+		xstream.alias(ROOT_ELEMENT, ResponseTextMessage.class);
+		String xml = xstream.toXML(respMsg);
 		return xml;
 	}
 }
