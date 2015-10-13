@@ -2,7 +2,6 @@ package com.sale.util;
 
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
-import java.util.Arrays;
 
 /**
  * 请求校验工具类

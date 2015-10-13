@@ -3,16 +3,15 @@ package com.sale.servlet;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.util.Date;
+import java.util.Map;
 
 import javax.servlet.ServletException;
 import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.apache.commons.io.IOUtils;
-
-import com.sale.entity.RequestTextMessage;
-import com.sale.entity.ResponseTextMessage;
+import com.sale.entity.message.request.RequestTextMessage;
+import com.sale.entity.message.response.ResponseTextMessage;
 import com.sale.util.MessageUtil;
 import com.sale.util.SignUtil;
 
@@ -22,8 +21,12 @@ import com.sale.util.SignUtil;
  * 
  */
 public class CoreServlet extends HttpServlet {
+
+	private static final long serialVersionUID = 1L;
+
 	@Override
-	protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doGet(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 
 		// 微信加密签名
 		String signature = req.getParameter("signature");
@@ -44,27 +47,35 @@ public class CoreServlet extends HttpServlet {
 	}
 
 	@Override
-	protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
+	protected void doPost(HttpServletRequest req, HttpServletResponse resp)
+			throws ServletException, IOException {
 		req.setCharacterEncoding(MessageUtil.DEFAULT_ENCODING);
 		resp.setCharacterEncoding(MessageUtil.DEFAULT_ENCODING);
 		resp.setContentType(MessageUtil.DEFAULT_CONTENT_TYPE);
 
 		PrintWriter out = resp.getWriter();
-		String reqXml = IOUtils.toString(req.getInputStream(), MessageUtil.DEFAULT_ENCODING);
-		RequestTextMessage reqRtm = MessageUtil.getRequestTextMessage(reqXml);
-		ResponseTextMessage respMsg = new ResponseTextMessage();
-		String msg = "您输入的消息是" + reqRtm.getContent();
-		if (MessageUtil.MESSAGE_TEXT.equals(reqRtm.getMsgType())) {
-			respMsg.setToUserName(reqRtm.getFromUserName());
-			respMsg.setFromUserName(reqRtm.getToUserName());
-			respMsg.setMsgType(MessageUtil.MESSAGE_TEXT);
-			respMsg.setCreateTime(String.valueOf(new Date().getTime()));
-			respMsg.setContent(msg);
-			String msgXml = MessageUtil.getResponseTextMessage(respMsg);
-			System.out.println(msgXml);
-			out.print(msgXml);
+		try {
+			Map<String, String> reqMap = MessageUtil.parseXml(req);
+			RequestTextMessage reqRtm = new RequestTextMessage(reqMap);
+
+			ResponseTextMessage respMsg = new ResponseTextMessage();
+			String msg = "您输入的消息是" + reqRtm.getContent();
+			if (MessageUtil.MESSAGE_TEXT.equals(reqRtm.getMsgType())) {
+				respMsg.setToUserName(reqRtm.getFromUserName());
+				respMsg.setFromUserName(reqRtm.getToUserName());
+				respMsg.setMsgType(MessageUtil.MESSAGE_TEXT);
+				respMsg.setCreateTime(new Date().getTime());
+				respMsg.setContent(msg);
+				String msgXml = MessageUtil.getMessageXml(respMsg, ResponseTextMessage.class);
+				System.out.println(msgXml);
+				out.print(msgXml);
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+		} finally {
+			out.close();
 		}
-		out.close();
+
 	}
 
 }
